@@ -1,0 +1,30 @@
+
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+.mapboxgl-popup {
+    max-width: 400px !important;
+}
+
+.mapboxgl-popup-content {
+    width: 380px;
+    max-height: 500px;
+    overflow-y: auto;  /* adds scrollbar if content is taller than 500px */
+    background-color: #f2f2e9;
+    color: #1b25f2; 
+    border-radius: 5px; 
+    border: 2px solid #1b25f2;
+    padding: 20 px;
+}
+
+.popup-card img {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+}
+
+.clue-images {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}

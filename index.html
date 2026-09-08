@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Birch (Betulaceae) Family Tree Walk</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.29.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.29.0/mapbox-gl.js"></script>
+<script id="search-js" defer src="https://api.mapbox.com/search-js/v1.6.0/web.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.2/mapbox-gl-directions.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.2/mapbox-gl-directions.css" type="text/css">
+
+<link href="./style.css" rel="stylesheet"/>
+
+</head>
+<body>
+    <div id="map"></div>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaHVkaW5oIiwiYSI6ImNtdG8xdzVwMDBwZnkyenM3bHN3bTdodmIifQ.GclqCq-2pfrrZnPUlAJBxQ';
+
+    const map = new mapboxgl.Map({
+        container: 'map', // For finding the div with id "map" to put our container in
+        center: [-73.970279,40.673652],
+        style: 'mapbox://styles/hudinh/cmth1cebu006x01sacb4j5pu0',
+        projection: 'globe',
+        zoom: 11,
+    });
+
+    const geolocate = new mapboxgl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+    });
+
+    map.addControl(geolocate);
+
+    const directions = new MapboxDirections({
+            accessToken: mapboxgl.accessToken, 
+            unit: 'metric',
+            profile: 'mapbox/walking',
+            interactive: false,
+            controls: {
+                inputs: true,
+                instructions: true
+            }
+        });
+
+    map.addControl(directions, 'top-right');
+
+    const treeState = {
+        '01': 'unvisited', 
+        '02': 'unvisited',
+        '03': 'unvisited'
+    }; 
+
+    function updateTreeState (treeId, newState) {
+        treeState[treeId] = newState;
+        console.log('Tree states after update:', treeState);
+
+        // if this tree is now the target, set it as the destination in directions
+        if (newState === 'target') {
+            // retrieve tree coordinates from source features
+            const features = map.querySourceFeatures('mapbox://hudinh.14wp2kyfcfk6', {
+                 sourceLayer: '68bb5b17bca5650c9abe',
+                filter: ['==', 'Tree ID', treeId]
+            });
+
+            if (features.length > 0) {
+                const coords = features[0].geometry.coordinates;
+                directions.setDestination(coords);
+            }
+        }
+
+        // update the map colors based on new state
+        map.setLayoutProperty('tree-location-icons', 'icon-image', [
+            'image',
+            'Tree Location Marker',
+            {
+                'params': {
+                    'color-1': '#f2f2e9',
+                    'color-2': [
+                        'match', ['get', 'Tree ID'],
+                        '01', treeState['01'] === 'target' ? '#1b25f2' :
+                              treeState['01'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '02', treeState['02'] === 'target' ? '#1b25f2' :
+                              treeState['02'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '03', treeState['03'] === 'target' ? '#1b25f2' :
+                              treeState['03'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '#a7a8a9'                              
+                    ]
+                }
+            }
+        ]);
+
+        map.setLayoutProperty('tree-icons', 'icon-image', [
+            'image', 
+            ['match', ['get', 'Tree ID'],
+                '01', treeState['01'] === 'target' || treeState['01'] === 'visited' ? 'Sweet Birch' : 'Number 1',
+                '02', treeState['02'] === 'target' || treeState['02'] === 'visited' ? 'Gray Birch' : 'Number 2',
+                '03', treeState['03'] === 'target' || treeState['03'] === 'visited' ? 'American Hornbeam' : 'Number 3',
+                'Question Mark'
+            ],
+            {
+                'params': {
+                    'color-1': '#f2f2e9',
+                    'color-2':  [
+                        'match', ['get', 'Tree ID'], 
+                        '01', treeState['01'] === 'target' ? '#1b25f2' :
+                              treeState['01'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '02', treeState['02'] === 'target' ? '#1b25f2' :
+                              treeState['02'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '03', treeState['03'] === 'target' ? '#1b25f2' :
+                              treeState['03'] === 'visited' ? '#8B91F8' : '#a7a8a9',
+                        '#a7a8a9'
+                    ]
+                }
+            }
+        ]);
+    };
+
+    map.on('load', () => {
+        // Log sources and trees layer to help debug
+        console.log('Sources:', map.getStyle().sources);
+        console.log('Trees layer:', map.getStyle().layers.find(l => l.id === 'trees'));
+
+        geolocate.on('geolocate', (e) => {
+            const lon = e.coords.longitude;
+            const lat = e.coords.latitude;
+            directions.setOrigin([lon, lat]);
+        });
+
+        map.setLayoutProperty('trees', 'icon-image', '');
+
+        // Layer 1 — marker base
+        map.addLayer({
+            'id': 'tree-location-icons',
+            'type': 'symbol',
+            'source': 'mapbox://hudinh.14wp2kyfcfk6',
+            'source-layer': '68bb5b17bca5650c9abe',
+            'layout': {
+                'icon-image': [
+                    'image', 
+                    'Tree Location Marker',
+                    {
+                        'params': {
+                            'color-1': '#f2f2e9',
+                            'color-2': '#a7a8a9'
+                        }
+                    }
+                ],
+                'icon-size': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    10,
+                    0.1,
+                    14,
+                    0.25
+                    ],
+                'icon-allow-overlap': true,
+            }
+        });
+
+        // Layer 2 - tree icons
+        map.addLayer({
+            'id': 'tree-icons',
+            'type': 'symbol',
+            'source': 'mapbox://hudinh.14wp2kyfcfk6',
+            'source-layer': '68bb5b17bca5650c9abe',
+            'layout': {
+                'icon-image': [
+                    'image',
+                    ['match', ['get', 'Tree ID'],
+                        '01', 'Number 1',
+                        '02', 'Number 2',
+                        '03', 'Number 3',
+                        'Question Mark',
+                    ],
+                    {
+                        'params': {
+                            'color-1': '#a7a8a9'
+                        }
+                    }
+                ],
+                'icon-size': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    10,
+                    0.2,
+                    14,
+                    0.3
+                    ],
+                'icon-allow-overlap': true,
+                'icon-offset': [1,1]
+            }, 
+            'paint': {
+                'icon-opacity': [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    13, 0,
+                    14, 1
+                    ],
+            }
+        });
+
+        map.addInteraction('feature-click', {
+            type: 'click', 
+            target: { layerId: 'tree-location-icons' }, 
+            handler(e) {
+                console.log('properties:', e.feature.properties);
+                // get the clicked tree's properties
+                const treeId = e.feature.properties['Tree ID'];
+                const treeCommonName = e.feature.properties['Common Name'];
+                const treeScientificName = e.feature.properties['Scientific Name']
+                const coordinates = e.feature.geometry.coordinates.slice();
+
+                // create and show popup
+                new mapboxgl.Popup({offset: 25, closeOnMove: true})
+                    .setLngLat(coordinates)
+                    .setHTML(`
+                        <div class="popup-card">
+                            <h3>${treeCommonName}</h3>
+                            <h3><em>${treeScientificName}</em></h3>
+                            <div class="clue-images">
+                                <img src="./images/clue-${treeId}_01.jpg" alt="Clue 1 Illustration"/>
+                                <img src="./images/clue-${treeId}_02.jpg" alt="Clue 2 Illustration"/>
+                            </div>
+                            <audio controls>
+                                <source src="./audio/audio-${treeId}.mp3" type="audio/mpeg">
+                            </audio>
+                            <button onclick="updateTreeState('${treeId}', 'target')">
+                                Take me there
+                            </button>
+                            <button onclick="updateTreeState('${treeId}', 'visited')">
+                                Finish observing
+                            </button>
+                        </div>
+                    `)
+                    .addTo(map);
+            }
+        });
+
+        // Mouse enter cursor change
+        map.addInteraction('enter-tree', {
+            type: 'mouseenter',
+            target: { layerId: 'tree-location-icons' }, 
+            handler(e) {
+                map.getCanvas().style.cursor = 'pointer'
+            }
+        });
+
+        // Mouse leave cursor change
+        map.addInteraction('leave-tree', {
+            type: 'mouseleave',
+            target: { layerId: 'tree-location-icons'},
+            handler(e) {
+                map.getCanvas().style.cursor = ''
+            }
+        })
+    })
+</script>
+
+</body>
+</html>
