@@ -57,6 +57,14 @@
         '03': 'unvisited'
     }; 
 
+    const treeData = {
+        '01': { commonName: 'Sweet Birch', scientificName: 'Betula lenta' },
+        '02': { commonName: 'Gray Birch', scientificName: 'Betula populifolia' },
+        '03': { commonName: 'American Hornbeam', scientificName: 'Carpinus caroliniana' }
+    };
+
+    let currentPopup = null;
+
     function updateTreeState (treeId, newState) {
         treeState[treeId] = newState;
         console.log('Tree states after update:', treeState);
@@ -73,6 +81,11 @@
                 const coords = features[0].geometry.coordinates;
                 directions.setDestination(coords);
             }
+        }
+
+        // refresh popup content if it's open
+        if (currentPopup && currentPopup.isOpen()) {
+            currentPopup.setHTML(getPopupHTML(treeId));
         }
 
         // update the map colors based on new state
@@ -121,6 +134,140 @@
             }
         ]);
     };
+
+    function getPopupHTML(treeId) {
+        const treeCommonName = treeData[treeId].commonName;
+        const treeScientificName = treeData[treeId].scientificName;
+        const state = treeState[treeId]
+
+        if (state === 'visited') {
+            return `
+                <div class="popup-card">
+                    <h3>${treeCommonName}</h3>
+                    <h3><em>${treeScientificName}</em></h3>
+                    <div class="clue-images">
+                        <img src="./images/clue-${treeId}_01.jpg" alt="Clue 1 Illustration"/>
+                        <img src="./images/clue-${treeId}_02.jpg" alt="Clue 2 Illustration"/>
+                    </div>
+                    <audio controls>
+                        <source src="./audio/audio-${treeId}.mp3" type="audio/mpeg">
+                    </audio>
+                    <button onclick="showCompareNotes('${treeId}')">
+                        Compare Notes
+                    </button>
+                </div>
+            `;
+            } else {
+                return `
+                    <div class="popup-card">
+                        <h3>${treeCommonName}</h3>
+                        <h3><em>${treeScientificName}</em></h3>
+                        <div class="clue-images">
+                            <img src="./images/clue-${treeId}_01.jpg" alt="Clue 1 Illustration"/>
+                            <img src="./images/clue-${treeId}_02.jpg" alt="Clue 2 Illustration"/>
+                        </div>
+                        <audio controls>
+                            <source src="./audio/audio-${treeId}.mp3" type="audio/mpeg">
+                        </audio>
+                        <button onclick="updateTreeState('${treeId}', 'target')">
+                            Take me there
+                        </button>
+                        <button onclick="updateTreeState('${treeId}', 'visited')">
+                            Finish observing
+                        </button>
+                    </div>
+                `
+            }
+        }
+
+    function showCompareNotes(treeId) {
+        const notes = {
+            '01': `
+                <h4>Sweet Birch Notes</h4>
+                <p><strong>Habit:</strong> Oval, Pyramidal</p>
+                <p><strong>Size:</strong> Medium-sized tree, 40'-50'</p>
+                <p><strong>Bark:</strong> 
+                    <ul>
+                        <li>Reddish brown with horizontal lenticels on young trees.</li>
+                        <li>Bark on older trunk is gray to blackish and cracks into scaly plates.</li> 
+                        <li>Twigs are reddish brown with small white lenticels.</li>
+                    </ul>
+                </p>
+                <p><strong>Leaf:</leaf> 
+                    <ul>
+                        <li>Shape: Ovate to elliptical</li>
+                        <li>Division: Simple</li>
+                        <li>Arrangement: Alternate</li>
+                        <li>Margin: Serrate</li>
+                        <li>Texture/Venation: Clearly impressed parallel veins</li>
+                        <li>Size: 2"-4" long</li>
+                    </ul>
+                </p>
+            `,
+            '02': `
+                <h4>Gray Birch Notes</h4>
+                <p><strong>Habit:</strong> Oval with an open and airy canopy that easily 
+                    flutters like the poplar tree</p>
+                <p><strong>Size:</strong> Small-medium tree, 20'-40'</p>
+                <p><strong>Bark:</strong>
+                    <ul>
+                        <li>Grayish white bark, darker gray on old trees</li>
+                        <li>Smooth, no peeling (unlike Paper Birch)</li>
+                        <li>Black trianglar patches where branch meets trunk</li>
+                    </ul>
+                </p>
+                <p><strong>Leaf:</strong>
+                    <ul>
+                        <li>Color: Dark green above, pale below</li>
+                        <li>Shape: Broadly triangular, ovate-deltoid with elongated and 
+                            sharply pointed tip. Long and slender petiole allows leaf 
+                            to flutter easily</li>
+                        <li>Division: Simple</li>
+                        <li>Arrangmenet: Alternate</li>
+                        <li>Margin: Doubly serrate</li>
+                        <li>Texture/Venation: shiny above, parallel veins</li>
+                        <li>Size: 2"-3.5" long</li>
+                    </ul>
+                </p>
+            `,
+            '03': `
+                <h4>American Hornbeam Notes</h4>
+                <p><strong>Habit:</strong> Round, flat-topped</p>
+                <p><strong>Size:</strong> Small-medium tree, 20'-35'</p>
+                <p><strong>Bark:</strong>
+                    <ul>
+                        <li>Smooth, light to medium gray</li>
+                        <li>Fluted, sinewy trunk that looks like muscles</li>
+                        <li>Stem is slender, smooth, dark red-brown and are dotted with 
+                            tan lenticels</li>
+                    </ul>
+                </p>
+                <p><strong>Leaf:</strong>
+                    <ul>
+                        <li>Shape: Ovate, elliptical</li>
+                        <li>Division: Simple</li>
+                        <li>Arrangmenet: Alternate</li>
+                        <li>Margin: Serrate</li>
+                        <li>Texture/Venation: Prominent parallel veins giving a 
+                            corrugated texture</li>
+                        <li>Size: 2"-5.5" long</li>
+                    </ul>
+                </p>
+            `
+        };
+
+        if (currentPopup) {
+            currentPopup.setHTML(`
+                <div class="popup-card">
+                    <h3>Compare Notes</h3>
+                    ${notes[treeId]}
+                    <button onclick="currentPopup.remove()">
+                        Close
+                    </button>
+                </div>
+            `);
+        }
+    }
 
     map.on('load', () => {
         // Log sources and trees layer to help debug
@@ -220,28 +367,13 @@
                 const treeScientificName = e.feature.properties['Scientific Name']
                 const coordinates = e.feature.geometry.coordinates.slice();
 
+                if (currentPopup) {
+                    currentPopup.remove();
+                }
                 // create and show popup
-                new mapboxgl.Popup({offset: 25, closeOnMove: true})
+                currentPopup = new mapboxgl.Popup({offset: 25, anchor: 'bottom'})
                     .setLngLat(coordinates)
-                    .setHTML(`
-                        <div class="popup-card">
-                            <h3>${treeCommonName}</h3>
-                            <h3><em>${treeScientificName}</em></h3>
-                            <div class="clue-images">
-                                <img src="./images/clue-${treeId}_01.jpg" alt="Clue 1 Illustration"/>
-                                <img src="./images/clue-${treeId}_02.jpg" alt="Clue 2 Illustration"/>
-                            </div>
-                            <audio controls>
-                                <source src="./audio/audio-${treeId}.mp3" type="audio/mpeg">
-                            </audio>
-                            <button onclick="updateTreeState('${treeId}', 'target')">
-                                Take me there
-                            </button>
-                            <button onclick="updateTreeState('${treeId}', 'visited')">
-                                Finish observing
-                            </button>
-                        </div>
-                    `)
+                    .setHTML(getPopupHTML(treeId))
                     .addTo(map);
             }
         });

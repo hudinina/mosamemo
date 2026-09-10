@@ -3,12 +3,12 @@ body { margin: 0; padding: 0; }
 #map { position: absolute; top: 0; bottom: 0; width: 100%; }
 
 .mapboxgl-popup {
-    max-width: 400px !important;
+    max-width: 75vw !important; /* vm = viewport width */
 }
 
 .mapboxgl-popup-content {
-    width: 380px;
-    max-height: 500px;
+    width: 70vw;
+    max-height: 70vh;
     overflow-y: auto;  /* adds scrollbar if content is taller than 500px */
     background-color: #f2f2e9;
     color: #1b25f2; 
@@ -17,10 +17,18 @@ body { margin: 0; padding: 0; }
     padding: 20 px;
 }
 
+.popup-card {
+    font-size: 14px;
+}
+
 .popup-card img {
-    width: 100%;
-    max-width: 200px;
+    max-width: 100%;
     height: auto;
+}
+
+.popup-card button {
+    min-height: 44px;
+    font-size: 14px;
 }
 
 .clue-images {
