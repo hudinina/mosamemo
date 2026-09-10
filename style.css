@@ -22,7 +22,7 @@ body { margin: 0; padding: 0; }
 }
 
 .popup-card img {
-    max-width: 100%;
+    max-width: 75%;
     height: auto;
 }
 
